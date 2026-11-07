@@ -43,6 +43,16 @@ const MAX_PIPELINED_MESSAGES: usize = 16;
 /// Write buffer capacity at which we reallocate it after flushing.
 const WRITE_BUFFER_RETENTION_LIMIT: usize = 1024 * 128;
 
+/// Returns `chunk`, or a copy of it when it is the only reference to an allocation with spare
+/// capacity, so holding it until it is written keeps no more memory than its bytes.
+fn without_spare_capacity(chunk: Bytes) -> Bytes {
+    match chunk.try_into_mut() {
+        Ok(buf) if buf.capacity() > buf.len() => Bytes::copy_from_slice(&buf),
+        Ok(buf) => buf.freeze(),
+        Err(chunk) => chunk,
+    }
+}
+
 bitflags! {
     #[derive(Debug, Clone, Copy)]
     pub struct Flags: u8 {
@@ -415,6 +425,11 @@ where
 
                 Poll::Pending => {
                     write_buf.advance(written);
+                    if write_buf.is_empty() && write_body.is_some() {
+                        // the head is out, so free the buffer while the body drains
+                        *write_buf = BytesMut::new();
+                        *write_buf_needs_reset = true;
+                    }
                     return Poll::Pending;
                 }
             }
@@ -716,9 +731,14 @@ where
                     {
                         match body.as_mut().poll_next(cx) {
                             Poll::Ready(Some(Ok(item))) => {
-                                if item.len() >= *this.h1_write_buffer_size {
+                                // without vectored writes the head and the chunk would take two writes,
+                                // so those streams copy the chunk into the buffer, as hyper does
+                                if item.len() >= *this.h1_write_buffer_size
+                                    && this.io.as_ref().is_some_and(|io| io.is_write_vectored())
+                                {
                                     if let Some(chunk) = this.codec.encode_chunk_unbuffered(&item) {
-                                        *this.write_body = Some(chunk);
+                                        drop(item);
+                                        *this.write_body = Some(without_spare_capacity(chunk));
                                         continue;
                                     }
                                 }
@@ -782,9 +802,14 @@ where
                     {
                         match body.as_mut().poll_next(cx) {
                             Poll::Ready(Some(Ok(item))) => {
-                                if item.len() >= *this.h1_write_buffer_size {
+                                // without vectored writes the head and the chunk would take two writes,
+                                // so those streams copy the chunk into the buffer, as hyper does
+                                if item.len() >= *this.h1_write_buffer_size
+                                    && this.io.as_ref().is_some_and(|io| io.is_write_vectored())
+                                {
                                     if let Some(chunk) = this.codec.encode_chunk_unbuffered(&item) {
-                                        *this.write_body = Some(chunk);
+                                        drop(item);
+                                        *this.write_body = Some(without_spare_capacity(chunk));
                                         continue;
                                     }
                                 }
