@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Write large fixed-length response bodies from their own buffer instead of copying them into the connection's write buffer, to lower peak memory while they are written.
+- Write large fixed-length response bodies from their own buffer instead of copying them into the connection's write buffer, when the connection supports vectored writes and the body's buffer has no room to spare.
 
 ## 3.20.3
 

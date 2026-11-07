@@ -43,6 +43,37 @@ const MAX_PIPELINED_MESSAGES: usize = 16;
 /// Write buffer capacity at which we reallocate it after flushing.
 const WRITE_BUFFER_RETENTION_LIMIT: usize = 1024 * 128;
 
+/// Holds a large chunk of a fixed-length body as `write_body`, to go out after `write_buf` without
+/// a copy, or gives it back to be copied into `write_buf` when holding it would cost more: a stream
+/// without vectored writes would take the head and the chunk in two writes, as hyper avoids too,
+/// and a chunk that is the only reference to an allocation with room to spare, like the `String`
+/// behind `.json()`, would keep that room allocated until it is written.
+fn hold_chunk(
+    codec: &mut Codec,
+    write_body: &mut Option<Bytes>,
+    write_vectored: bool,
+    min_len: usize,
+    chunk: Bytes,
+) -> Option<Bytes> {
+    if chunk.len() < min_len || !write_vectored {
+        return Some(chunk);
+    }
+
+    let chunk = match chunk.try_into_mut() {
+        Ok(buf) if buf.capacity() > buf.len() => return Some(buf.freeze()),
+        Ok(buf) => buf.freeze(),
+        Err(chunk) => chunk,
+    };
+
+    match codec.encode_chunk_unbuffered(&chunk) {
+        Some(body) => {
+            *write_body = Some(body);
+            None
+        }
+        None => Some(chunk),
+    }
+}
+
 bitflags! {
     #[derive(Debug, Clone, Copy)]
     pub struct Flags: u8 {
@@ -415,6 +446,11 @@ where
 
                 Poll::Pending => {
                     write_buf.advance(written);
+                    if write_buf.is_empty() && write_body.is_some() {
+                        // the head is out, so free the buffer while the body drains
+                        *write_buf = BytesMut::new();
+                        *write_buf_needs_reset = true;
+                    }
                     return Poll::Pending;
                 }
             }
@@ -716,14 +752,18 @@ where
                     {
                         match body.as_mut().poll_next(cx) {
                             Poll::Ready(Some(Ok(item))) => {
-                                if item.len() >= *this.h1_write_buffer_size {
-                                    if let Some(chunk) = this.codec.encode_chunk_unbuffered(&item) {
-                                        *this.write_body = Some(chunk);
-                                        continue;
-                                    }
+                                let write_vectored =
+                                    this.io.as_ref().is_some_and(|io| io.is_write_vectored());
+                                if let Some(item) = hold_chunk(
+                                    this.codec,
+                                    this.write_body,
+                                    write_vectored,
+                                    *this.h1_write_buffer_size,
+                                    item,
+                                ) {
+                                    this.codec
+                                        .encode(Message::Chunk(Some(item)), this.write_buf)?;
                                 }
-                                this.codec
-                                    .encode(Message::Chunk(Some(item)), this.write_buf)?;
                             }
 
                             Poll::Ready(None) => {
@@ -782,14 +822,18 @@ where
                     {
                         match body.as_mut().poll_next(cx) {
                             Poll::Ready(Some(Ok(item))) => {
-                                if item.len() >= *this.h1_write_buffer_size {
-                                    if let Some(chunk) = this.codec.encode_chunk_unbuffered(&item) {
-                                        *this.write_body = Some(chunk);
-                                        continue;
-                                    }
+                                let write_vectored =
+                                    this.io.as_ref().is_some_and(|io| io.is_write_vectored());
+                                if let Some(item) = hold_chunk(
+                                    this.codec,
+                                    this.write_body,
+                                    write_vectored,
+                                    *this.h1_write_buffer_size,
+                                    item,
+                                ) {
+                                    this.codec
+                                        .encode(Message::Chunk(Some(item)), this.write_buf)?;
                                 }
-                                this.codec
-                                    .encode(Message::Chunk(Some(item)), this.write_buf)?;
                             }
 
                             Poll::Ready(None) => {
