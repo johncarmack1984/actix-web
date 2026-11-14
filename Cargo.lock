@@ -24,7 +24,6 @@ name = "actix-files"
 version = "0.7.4"
 dependencies = [
  "actix-http",
- "actix-rt",
  "actix-service",
  "actix-test",
  "actix-utils",
@@ -42,6 +41,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "tempfile",
+ "tokio",
  "v_htmlescape",
  "winapi-util",
 ]
@@ -143,12 +143,11 @@ dependencies = [
 
 [[package]]
 name = "actix-multipart"
-version = "0.8.7"
+version = "0.8.8"
 dependencies = [
  "actix-http",
  "actix-multipart-derive",
  "actix-multipart-rfc7578",
- "actix-rt",
  "actix-test",
  "actix-utils",
  "actix-web",
@@ -260,7 +259,6 @@ dependencies = [
  "actix-codec",
  "actix-http",
  "actix-http-test",
- "actix-rt",
  "actix-service",
  "actix-utils",
  "actix-web",
@@ -385,7 +383,6 @@ version = "4.5.0"
 dependencies = [
  "actix-macros",
  "actix-router",
- "actix-rt",
  "actix-test",
  "actix-utils",
  "actix-web",
@@ -394,6 +391,7 @@ dependencies = [
  "quote",
  "rustversion-msrv",
  "syn 3.0.9",
+ "tokio",
  "trybuild",
 ]
 
@@ -748,9 +746,9 @@ dependencies = [
 
 [[package]]
 name = "brotli-decompressor"
-version = "6.2.0"
+version = "6.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34c6783f42c21c952ad7112b354f0ba2f10760e9decea5b1b60523d6e270faaf"
+checksum = "97d9071e5b45944c5a9c06baf13a7a65ffa2c88c204015967852c90869692c05"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",
@@ -1382,9 +1380,9 @@ checksum = "00d174d5400e5e8fd687ad1049e2f578285fa914201b1af7e8b112a4546bd826"
 
 [[package]]
 name = "err-report"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c938813462d5001478fc06956acf5debbe2e5dd74f531244ed16a03ad07b3d05"
+checksum = "5bb4f001d0c6b9fb6de1fde9a65b19c0958dd4b5e6bce04676a10a33255f367d"
 
 [[package]]
 name = "errno"
@@ -1420,9 +1418,9 @@ checksum = "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484"
 
 [[package]]
 name = "flate2"
-version = "1.1.10"
+version = "1.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
+checksum = "626d4928326b646e70f65ed36fc7cf9f206bdb68a0019ee7c6b4709da4e084c4"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
@@ -2165,9 +2163,9 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "mime"
-version = "0.3.17"
+version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+checksum = "d5848f5a9e8117cf94f2f90faac24a87ff81600ff8628c1e3deaab572e76bfa1"
 
 [[package]]
 name = "mime_guess"
@@ -3129,9 +3127,9 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "smallvec"
-version = "1.16.4"
+version = "1.16.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0d5d4b1981b8bbbb7aed204cae5726d683d5d6ac7e74ec54122ea28f315e7c8"
+checksum = "149309498a5f7334b12ddae0cad8aba81ce785fe91755068867e017cf98fee46"
 
 [[package]]
 name = "socket2"

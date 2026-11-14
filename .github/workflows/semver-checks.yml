@@ -18,12 +18,12 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.1
         with:
           toolchain: stable
 
       - name: Install cargo-semver-checks
-        uses: taiki-e/install-action@v2.89.0
+        uses: taiki-e/install-action@v2.90.3
         with:
           tool: cargo-semver-checks
 

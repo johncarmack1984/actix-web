@@ -33,7 +33,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - uses: zizmorcore/zizmor-action@v0.8.0
+      - uses: zizmorcore/zizmor-action@v0.8.1
         with:
           advanced-security: false
           annotations: true
@@ -59,7 +59,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust (nightly)
-        uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.1
         with:
           toolchain: nightly
           components: rustfmt
@@ -79,7 +79,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.1
         with:
           components: clippy
 
@@ -100,7 +100,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust (nightly)
-        uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.1
         with:
           toolchain: nightly
           components: rust-docs
@@ -119,12 +119,12 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust (${{ vars.RUST_VERSION_EXTERNAL_TYPES }})
-        uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.1
         with:
           toolchain: ${{ vars.RUST_VERSION_EXTERNAL_TYPES }}
 
       - name: Install just
-        uses: taiki-e/install-action@v2.89.0
+        uses: taiki-e/install-action@v2.90.3
         with:
           tool: just
 
